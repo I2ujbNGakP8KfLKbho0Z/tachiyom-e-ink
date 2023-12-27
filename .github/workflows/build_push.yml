@@ -36,23 +36,22 @@ jobs:
       # Sign APK and create release for tags
 
       - name: Get tag name
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'tachiyomiorg/tachiyomi'
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           set -x
           echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
       - name: Sign APK
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'tachiyomiorg/tachiyomi'
+        if: startsWith(github.ref, 'refs/tags/')
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: app/build/outputs/apk/standard/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Clean up build artifacts
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'tachiyomiorg/tachiyomi'
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           set -e
 
@@ -77,7 +76,7 @@ jobs:
           echo "APK_X86_64_SHA=$sha" >> $GITHUB_ENV
 
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'tachiyomiorg/tachiyomi'
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.VERSION_TAG }}
@@ -104,13 +103,3 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  update-website:
-    needs: [build]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') && github.repository == 'tachiyomiorg/tachiyomi'
-    steps:
-      - name: Trigger Netlify build hook
-        run: curl -s -X POST -d {} "https://api.netlify.com/build_hooks/${TOKEN}"
-        env:
-          TOKEN: ${{ secrets.NETLIFY_HOOK_RELEASE }}
